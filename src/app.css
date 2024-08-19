@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+button {
+    transition: all 0.2s ease;
+}
+.grid .grid > div {
+    transition: all 0.2s ease;
+}
+
+button.selected {
+    @apply border-2 border-gray-700 bg-white;
+}
+
+.hovered {
+    @apply rounded-3xl bg-yellow-600  text-white;
+    transition: all 0.2s ease;
+}
