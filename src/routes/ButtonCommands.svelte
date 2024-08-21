@@ -26,5 +26,5 @@
     >
         {isDraftMode ? 'Draft On' : 'Draft Off'} 
     </button>
-    <button on:click={adminTest}>test</button>
+    <!-- <button on:click={adminTest}>test</button> -->
 </div>
