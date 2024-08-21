@@ -5,38 +5,34 @@
     import NumberGrid from './NumberGrid.svelte';
     import ButtonCommands from './ButtonCommands.svelte';
     import { onMount } from 'svelte';
-    import { fetchTodaysSudoku } from '../lib/supabase';
     import SuccessScreen from './SuccessScreen.svelte';
     import LoadingGrid from './LoadingGrid.svelte';
+    export let data;
 
     interface CellData {
         value: string;
         draft: string[];
     }
 
-    // let initial: string[] = "7.9.......325...8.6..8......1.2.75....8...6..35.6........1.6...5..32...7.9...83..".split("");
-    // let current: CellData[] = "7.9.......325...8.6..8......1.2.75....8...6..35.6........1.6...5..32...7.9...83..".split("").map(n => ({ value: n, draft: [] }));
-    // let final: CellData[] = "789413265132569784645872139916287543428935671357641928873196452561324897294758316".split("").map(n => ({ value: n, draft: [] }));
-    let sudokuPromise: Promise<void>;
     let initial: string[] = [];
     let current: CellData[] = [];
     let final: CellData[] = [];
     let isLoading = true;
 
-    // onMount(async () => {
-    //     const sudokuData = await fetchTodaysSudoku();
-        
-    //     if (!sudokuData) {
-    //         console.error('No Sudoku data found for today!');
-    //         return;
-    //     }
-
-    //     initial = reorderElements(sudokuData.puzzle.split(""));
-    //     current = reorderElements(sudokuData.puzzle.split("").map(n => ({ value: n, draft: [] })));
-    //     final = reorderElements(sudokuData.solution.split("").map(n => ({ value: n, draft: [] })));
-        
-    // });
-
+    onMount(() => {
+        if (data.sudoku && data.solution) {
+            initial = data.sudoku.split('')
+            current = initial.map(n => ({ value: n, draft: [] }));
+            final = data.solution.split('').map(n => ({ value: n, draft: [] }));
+            isLoading = false;
+        } else {
+        console.error('Invalid data format. Expected an array of 2 strings.');
+        }
+        initial = reorderElements(initial) as string[];
+        current = reorderElements(current) as CellData[];
+        final = reorderElements(final) as CellData[];
+    });
+    
     let selectedNumber: string | null = null;
     let selectedCellIndex: number | null = null;
     let isDraftMode: boolean = false;
@@ -49,27 +45,6 @@
     function reorderElements(inputArray: any[]): any[] {
         return newOrder.map(index => inputArray[index - 1]);
     }
-
-    onMount(() => {
-        sudokuPromise = loadSudokuData();
-    });
-    async function loadSudokuData() {
-        const sudokuData = await fetchTodaysSudoku();
-        
-        if (!sudokuData) {
-            throw new Error('No Sudoku data found for today!');
-        }
-
-        initial = reorderElements(sudokuData.puzzle.split(""));
-        current = reorderElements(sudokuData.puzzle.split("").map(n => ({ value: n, draft: [] })));
-        final = reorderElements(sudokuData.solution.split("").map(n => ({ value: n, draft: [] })));
-        isLoading = false;
-    }
-
-
-    // initial = reorderElements(initial) as string[];
-    // current = reorderElements(current) as CellData[];
-    // final = reorderElements(final) as CellData[];
 
     function handleNumberClick(number: string): void {
         if (selectedNumber === number) {
@@ -143,7 +118,7 @@
         current = initial.map(n => ({ value: n, draft: [] }));
     }
 
-    // revoir où les détails de timer vont, idéalement un fichier à part pour ensuite store pour un user qui quitte/réouvre la page
+    // update quand on reconnait un user unique
     let startTime: Date = new Date();
     let elapsedTime: number = 0;
     let timerInterval: ReturnType<typeof setInterval> | undefined; 
