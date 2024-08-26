@@ -7,7 +7,7 @@
     import { onMount } from 'svelte';
     import SuccessScreen from './SuccessScreen.svelte';
     import LoadingGrid from './LoadingGrid.svelte';
-    export let data;
+    export let data: { sudoku: string; solution: string };
 
     interface CellData {
         value: string;
@@ -31,6 +31,8 @@
         initial = reorderElements(initial) as string[];
         current = reorderElements(current) as CellData[];
         final = reorderElements(final) as CellData[];
+
+        console.log(current)
     });
     
     let selectedNumber: string | null = null;
@@ -111,7 +113,7 @@
 
     
     function adminTest(): void {
-        current = final;
+        current = [...final];
     }
 
     function handleClear(): void {
@@ -146,7 +148,7 @@
     const successResult = 'Sudoku #n /n {chrono} /n {reward} /n sodu-iq.com';
 </script>
 
-<main>
+<main class="w-full max-w-[430px] mx-auto flex flex-col items-center">
     <h1 class="text-xl text-center">Sudo Q</h1>
     <Timer {chrono}/>
     {#if isLoading}

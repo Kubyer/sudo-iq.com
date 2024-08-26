@@ -15,7 +15,7 @@
       });
   }
 
-  $: successResult = `Sudoku #\n${chrono}\nsodu-iq.com`;
+  $: successResult = `Sudoku #\n${chrono}\sudo-iq.com`;
 </script>
 <div class="text-center mt-4">
     <h2 class="text-2xl text-green-500">Yay, you won!</h2>
