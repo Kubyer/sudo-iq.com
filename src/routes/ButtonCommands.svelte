@@ -6,7 +6,7 @@
     export let isDraftMode: boolean;
 </script>
 
-<div class="text-center mx-auto p-2">
+<div class="flex justify-center items-center space-x-4 mx-auto p-2">
     <button on:click={handleClear} class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded drop-shadow-2xl">
     Reset
     </button>
@@ -15,15 +15,15 @@
     </button>
     <button 
         on:click={toggleDraftMode} 
-        class={`
-        font-bold py-2 px-4 rounded
-        transition-all
-        ${isDraftMode 
-            ? 'bg-yellow-400 hover:bg-yellow-500 text-black shadow-2xl' 
-            : 'bg-gray-400 hover:bg-gray-500 text-white shadow-inner-2xl' 
-        }
-        `}
-    >
-        {isDraftMode ? 'Draft On' : 'Draft Off'} 
+        class='flex items-center justify-center h-12 w-12 hover:bg-gray-300 drop-shadow-2xl'>
+    {#if isDraftMode}
+        <img src="src/lib/draft_on.svg" alt="Button Icon"/>
+    {:else}
+        <img src="src/lib/draft_off.svg" alt="Button Icon"/>
+    {/if}
     </button>
+    <!-- <button on:click={adminTest}
+        class="w-12 h-12 ">
+        admin
+    </button> -->
 </div>
