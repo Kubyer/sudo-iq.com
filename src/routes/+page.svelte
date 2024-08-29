@@ -9,6 +9,11 @@
     import LoadingGrid from './LoadingGrid.svelte';
     export let data: { sudoku: string; solution: string };
 
+    import { inject } from '@vercel/analytics'
+    import { dev } from '$app/environment';
+
+    inject({ mode: dev ? 'development' : 'production' });
+
     interface CellData {
         value: string;
         draft: string[];
