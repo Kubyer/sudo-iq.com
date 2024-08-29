@@ -33,8 +33,105 @@
         final = reorderElements(final) as CellData[];
 
         console.log(current)
+        window.addEventListener('keydown', handleKeyDown);
     });
     
+    function updateCell(index: number, value: string): void {
+        if (initial[index] === '.') {
+            if (value === "X") {
+                current[index].value = ".";
+                current[index].draft = [];
+            } else if (current[index].value === value) {
+                current[index].value = ".";
+            } else {
+                current[index].value = value;
+                current[index].draft = [];
+            }
+            current = [...current];
+            checkSolution();
+        }
+    }
+
+    function handleKeyDown(event: KeyboardEvent): void {
+        if (selectedCellIndex === null) return;
+
+        if (event.key >= '1' && event.key <= '9') {
+            updateCell(selectedCellIndex, event.key);
+        } else if (event.key === 'Backspace' || event.key === 'Delete') {
+            updateCell(selectedCellIndex, 'X');
+        } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+            event.preventDefault();
+            navigateGrid(event.key);
+        }
+    }
+
+    function navigateGrid(direction: string): void {
+    if (selectedCellIndex === null) return;
+
+    let newIndex = selectedCellIndex;
+    const maxTries = 9; // Maximum number of cells to check in any direction
+
+    for (let i = 0; i < maxTries; i++) {
+        const currentSubgrid = Math.floor(newIndex / 9);
+        const subgridRow = Math.floor(currentSubgrid / 3);
+        const subgridCol = currentSubgrid % 3;
+        const cellInSubgrid = newIndex % 9;
+        const rowInSubgrid = Math.floor(cellInSubgrid / 3);
+        const colInSubgrid = cellInSubgrid % 3;
+
+        let newSubgridRow = subgridRow;
+        let newSubgridCol = subgridCol;
+        let newRowInSubgrid = rowInSubgrid;
+        let newColInSubgrid = colInSubgrid;
+
+        switch (direction) {
+            case 'ArrowUp':
+                if (rowInSubgrid > 0) {
+                    newRowInSubgrid--;
+                } else {
+                    newSubgridRow = (subgridRow - 1 + 3) % 3;
+                    newRowInSubgrid = 2;
+                }
+                break;
+            case 'ArrowDown':
+                if (rowInSubgrid < 2) {
+                    newRowInSubgrid++;
+                } else {
+                    newSubgridRow = (subgridRow + 1) % 3;
+                    newRowInSubgrid = 0;
+                }
+                break;
+            case 'ArrowLeft':
+                if (colInSubgrid > 0) {
+                    newColInSubgrid--;
+                } else {
+                    newSubgridCol = (subgridCol - 1 + 3) % 3;
+                    newColInSubgrid = 2;
+                }
+                break;
+            case 'ArrowRight':
+                if (colInSubgrid < 2) {
+                    newColInSubgrid++;
+                } else {
+                    newSubgridCol = (subgridCol + 1) % 3;
+                    newColInSubgrid = 0;
+                }
+                break;
+        }
+
+        const newSubgrid = newSubgridRow * 3 + newSubgridCol;
+        const newCellInSubgrid = newRowInSubgrid * 3 + newColInSubgrid;
+        newIndex = newSubgrid * 9 + newCellInSubgrid;
+
+        // If the new cell is editable, update selectedCellIndex and exit
+        if (initial[newIndex] === '.') {
+            selectedCellIndex = newIndex;
+            break;
+        }
+        // If not editable, continue to the next cell in the same direction
+    }
+}
+
     let selectedNumber: string | null = null;
     let selectedCellIndex: number | null = null;
     let isDraftMode: boolean = false;
@@ -56,6 +153,7 @@
             if (selectedCellIndex !== null && !isDraftMode) {
                 current[selectedCellIndex].value = selectedNumber;
                 selectedCellIndex = null;
+                checkSolution()
             }
         }
     }
@@ -93,25 +191,23 @@
                     }
                 }
                 current = [...current];
+                checkSolution()
             }
         }
     }
 
     let showSuccess: boolean = false;
 
-    function handleSubmit(): void {
+    function checkSolution(): void {
         const currentValues = current.map(cell => cell.value).join('');
         if (currentValues === final.map(cell => cell.value).join('')) {
             stopTimer();
             showSuccess = true;
             selectedNumber = null;
             selectedCellIndex = null;
-        } else {
-            alert("Sudoku is not solved yet.");
         }
     }
 
-    
     function adminTest(): void {
         current = [...final];
     }
@@ -149,13 +245,16 @@
 </script>
 
 <main class="w-full max-w-[430px] mx-auto flex flex-col items-center">
-    <h1 class="text-xl text-center">Sudo Q</h1>
-    <Timer {chrono}/>
+    <div class="flex justify-center items-center space-x-4 mx-auto p-2">
+        <h1 class="text-xl text-center">Sudo Q</h1>
+        <Timer {chrono}/>
+        <img src="src/lib/info.svg" class='flex items-center justify-center h-12 w-12 hover:bg-gray-300 drop-shadow-2xl' alt="info Icon"/>
+    </div>
+    
     {#if isLoading}
         <LoadingGrid/>
         <ButtonCommands
                 {handleClear}
-                {handleSubmit}
                 {toggleDraftMode}
                 {adminTest}
                 {isDraftMode}/>
@@ -177,7 +276,6 @@
         {:else}
             <ButtonCommands
                 {handleClear}
-                {handleSubmit}
                 {toggleDraftMode}
                 {adminTest}
                 {isDraftMode}/>
