@@ -9,7 +9,6 @@
   export let selectedNumber: string | null;
   export let selectedCellIndex: number | null;
   export let handleCellClick: (index: number) => void;
-  //export let handleNumberClick: (index: number) => void; prochaine update où click une cell change le number selected
 </script>
 
 <div class="grid grid-cols-3 gap-2 w-max mx-auto p-2">
@@ -19,22 +18,24 @@
         {#if initial[subgrid * 9 + i] === '.'}
           <button
             on:click={() => handleCellClick(subgrid * 9 + i)}
-            class="rounded-xl bg-gray-200 hover:bg-gray-500 text-center h-12 w-12 relative 
+            class="rounded-xl bg-gray-200 hover:bg-gray-500 text-center h-10 w-10 relative 
                    {(selectedNumber === cell.value) || (selectedNumber && cell.draft.includes(selectedNumber)) ? 'hovered' : ''}"
             class:selected={selectedCellIndex === (subgrid * 9 + i)}>
             {#if cell.value !== '.'}
               <span class="text-lg">{cell.value}</span>
             {:else}
-              <div class="grid grid-cols-3 gap-0 absolute inset-0 text-xs p-0.5">
-                {#each ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as num}
-                  <span class={cell.draft.includes(num) ? 'opacity-100' : 'opacity-0'}>{num}</span>
+              <div class="text-xs flex flex-wrap justify-center items-center text-center overflow-hidden leading-tight">
+                {#each cell.draft.slice().sort() as num,j}
+                  <span class="mr-0.5">
+                    {num}
+                    {#if (j + 1) % 3 === 0}<br>{/if}</span>
                 {/each}
               </div>
             {/if}
           </button>
         {:else}
           <div
-            class="rounded-xl bg-gray-300 place-content-center h-12 w-12 flex items-center justify-center
+            class="rounded-xl bg-gray-300 place-content-center h-10 w-10 flex items-center justify-center
                   {selectedNumber === cell.value ? 'hovered' : ''}">
             {cell.value}
           </div>

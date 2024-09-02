@@ -19,10 +19,17 @@
         draft: string[];
     }
 
+    interface Move {
+        index: number;
+        oldCell: CellData;
+        newCell: CellData;
+    }
+
     let initial: string[] = [];
     let current: CellData[] = [];
     let final: CellData[] = [];
     let isLoading = true;
+    let moveHistory: Move[] = [];
 
     onMount(() => {
         if (data.sudoku && data.solution) {
@@ -37,11 +44,15 @@
         current = reorderElements(current) as CellData[];
         final = reorderElements(final) as CellData[];
 
-        console.log(current)
         window.addEventListener('keydown', handleKeyDown);
     });
     
     function updateCell(index: number, value: string): void {
+        const oldCell: CellData = {
+            value: current[index].value,
+            draft: [...current[index].draft]
+        };
+
         if (initial[index] === '.') {
             if (value === "X") {
                 current[index].value = ".";
@@ -52,6 +63,19 @@
                 current[index].value = value;
                 current[index].draft = [];
             }
+            
+            const oldCell: CellData = {
+                value: current[index].value,
+                draft: [...current[index].draft]
+            };
+
+            const newCell: CellData = {
+                value: current[index].value,
+                draft: [...current[index].draft]
+            };
+
+            moveHistory.push({ index, oldCell, newCell });
+            console.log("New item in hist")
             current = [...current];
             checkSolution();
         }
@@ -67,75 +91,77 @@
         } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
             event.preventDefault();
             navigateGrid(event.key);
+            console.log(selectedCellIndex)
+
         }
     }
 
     function navigateGrid(direction: string): void {
-    if (selectedCellIndex === null) return;
+        if (selectedCellIndex === null) return;
 
-    let newIndex = selectedCellIndex;
-    const maxTries = 9; // Maximum number of cells to check in any direction
+        let newIndex = selectedCellIndex;
+        const maxTries = 9; // Avoid infinite scroll
 
-    for (let i = 0; i < maxTries; i++) {
-        const currentSubgrid = Math.floor(newIndex / 9);
-        const subgridRow = Math.floor(currentSubgrid / 3);
-        const subgridCol = currentSubgrid % 3;
-        const cellInSubgrid = newIndex % 9;
-        const rowInSubgrid = Math.floor(cellInSubgrid / 3);
-        const colInSubgrid = cellInSubgrid % 3;
+        for (let i = 0; i < maxTries; i++) {
+            const currentSubgrid = Math.floor(newIndex / 9);
+            const subgridRow = Math.floor(currentSubgrid / 3);
+            const subgridCol = currentSubgrid % 3;
+            const cellInSubgrid = newIndex % 9;
+            const rowInSubgrid = Math.floor(cellInSubgrid / 3);
+            const colInSubgrid = cellInSubgrid % 3;
 
-        let newSubgridRow = subgridRow;
-        let newSubgridCol = subgridCol;
-        let newRowInSubgrid = rowInSubgrid;
-        let newColInSubgrid = colInSubgrid;
+            let newSubgridRow = subgridRow;
+            let newSubgridCol = subgridCol;
+            let newRowInSubgrid = rowInSubgrid;
+            let newColInSubgrid = colInSubgrid;
 
-        switch (direction) {
-            case 'ArrowUp':
-                if (rowInSubgrid > 0) {
-                    newRowInSubgrid--;
-                } else {
-                    newSubgridRow = (subgridRow - 1 + 3) % 3;
-                    newRowInSubgrid = 2;
-                }
+            switch (direction) {
+                case 'ArrowUp':
+                    if (rowInSubgrid > 0) {
+                        newRowInSubgrid--;
+                    } else {
+                        newSubgridRow = (subgridRow - 1 + 3) % 3;
+                        newRowInSubgrid = 2;
+                    }
+                    break;
+                case 'ArrowDown':
+                    if (rowInSubgrid < 2) {
+                        newRowInSubgrid++;
+                    } else {
+                        newSubgridRow = (subgridRow + 1) % 3;
+                        newRowInSubgrid = 0;
+                    }
+                    break;
+                case 'ArrowLeft':
+                    if (colInSubgrid > 0) {
+                        newColInSubgrid--;
+                    } else {
+                        newSubgridCol = (subgridCol - 1 + 3) % 3;
+                        newColInSubgrid = 2;
+                    }
+                    break;
+                case 'ArrowRight':
+                    if (colInSubgrid < 2) {
+                        newColInSubgrid++;
+                    } else {
+                        newSubgridCol = (subgridCol + 1) % 3;
+                        newColInSubgrid = 0;
+                    }
+                    break;
+            }
+
+            const newSubgrid = newSubgridRow * 3 + newSubgridCol;
+            const newCellInSubgrid = newRowInSubgrid * 3 + newColInSubgrid;
+            newIndex = newSubgrid * 9 + newCellInSubgrid;
+
+            // If the new cell is editable, update selectedCellIndex and exit
+            if (initial[newIndex] === '.') {
+                selectedCellIndex = newIndex;
                 break;
-            case 'ArrowDown':
-                if (rowInSubgrid < 2) {
-                    newRowInSubgrid++;
-                } else {
-                    newSubgridRow = (subgridRow + 1) % 3;
-                    newRowInSubgrid = 0;
-                }
-                break;
-            case 'ArrowLeft':
-                if (colInSubgrid > 0) {
-                    newColInSubgrid--;
-                } else {
-                    newSubgridCol = (subgridCol - 1 + 3) % 3;
-                    newColInSubgrid = 2;
-                }
-                break;
-            case 'ArrowRight':
-                if (colInSubgrid < 2) {
-                    newColInSubgrid++;
-                } else {
-                    newSubgridCol = (subgridCol + 1) % 3;
-                    newColInSubgrid = 0;
-                }
-                break;
+            }
+            // If not editable, continue to the next cell in the same direction
         }
-
-        const newSubgrid = newSubgridRow * 3 + newSubgridCol;
-        const newCellInSubgrid = newRowInSubgrid * 3 + newColInSubgrid;
-        newIndex = newSubgrid * 9 + newCellInSubgrid;
-
-        // If the new cell is editable, update selectedCellIndex and exit
-        if (initial[newIndex] === '.') {
-            selectedCellIndex = newIndex;
-            break;
-        }
-        // If not editable, continue to the next cell in the same direction
     }
-}
 
     let selectedNumber: string | null = null;
     let selectedCellIndex: number | null = null;
@@ -195,12 +221,22 @@
                         selectedCellIndex = null;
                     }
                 }
+
                 current = [...current];
                 checkSolution()
             }
         }
     }
-
+    
+    function undoLastMove(): void {
+        if (moveHistory.length > 0) {
+            const lastMove = moveHistory.pop();
+            if (lastMove) {
+                current[lastMove.index] = { ...lastMove.oldCell };
+                current = [...current];
+            }
+        }
+    }
     let showSuccess: boolean = false;
 
     function checkSolution(): void {
@@ -249,11 +285,11 @@
     const successResult = 'Sudoku #n /n {chrono} /n {reward} /n sodu-iq.com';
 </script>
 
-<main class="w-full max-w-[430px] mx-auto flex flex-col items-center">
+<main>
     <div class="flex justify-center items-center space-x-4 mx-auto p-2">
         <h1 class="text-xl text-center">Sudo Q</h1>
         <Timer {chrono}/>
-        <img src="src/lib/info.svg" class='flex items-center justify-center h-12 w-12 hover:bg-gray-300 drop-shadow-2xl' alt="info Icon"/>
+        <img src="/info.svg" class='flex items-center justify-center h-12 w-12 hover:bg-gray-300 drop-shadow-2xl' alt="info Icon"/>
     </div>
     
     {#if isLoading}
@@ -262,7 +298,8 @@
                 {handleClear}
                 {toggleDraftMode}
                 {adminTest}
-                {isDraftMode}/>
+                {isDraftMode}
+                {undoLastMove}/>
         <NumberGrid
         {selectedNumber}
         {handleNumberClick}/>
@@ -283,7 +320,8 @@
                 {handleClear}
                 {toggleDraftMode}
                 {adminTest}
-                {isDraftMode}/>
+                {isDraftMode}
+                {undoLastMove}/>
 
             <NumberGrid
             {selectedNumber}
