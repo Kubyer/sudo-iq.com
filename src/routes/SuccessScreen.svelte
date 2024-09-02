@@ -23,7 +23,7 @@
     <p class="text-gray-600">Time: {chrono}</p>
     <button on:click={() => copyToClipboard(successResult)}
       class='flex items-center justify-center h-12 w-12 hover:bg-gray-300 drop-shadow-2xl'>
-      <img src="src/lib/copy.svg" alt="Button Icon"/>
+      <img src="/copy.svg" alt="Button Icon"/>
     </button>
     <p>Share!</p>
   </div>

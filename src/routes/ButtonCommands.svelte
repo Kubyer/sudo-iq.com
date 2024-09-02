@@ -14,9 +14,9 @@
         on:click={toggleDraftMode} 
         class='flex items-center justify-center h-12 w-12 hover:bg-gray-300 drop-shadow-2xl'>
     {#if isDraftMode}
-        <img src="src/lib/draft_on.svg" alt="Button Icon"/>
+        <img src="/draft_on.svg" alt="Button Icon"/>
     {:else}
-        <img src="src/lib/draft_off.svg" alt="Button Icon"/>
+        <img src="/draft_off.svg" alt="Button Icon"/>
     {/if}
     </button>
     <button on:click={adminTest}
@@ -24,6 +24,6 @@
         admin
     </button>
     <button on:click={undoLastMove}>
-        <img src="src/lib/undo.svg" class='flex items-center justify-center h-12 w-12 hover:bg-gray-300 drop-shadow-2xl' alt="Button Icon"/>
+        <img src="/undo.svg" class='flex items-center justify-center h-12 w-12 hover:bg-gray-300 drop-shadow-2xl' alt="Button Icon"/>
     </button>
     </div>
