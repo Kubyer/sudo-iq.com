@@ -15,10 +15,10 @@
       });
   }
 
-  $: successResult = `Sudoku #\n${chrono}\sudo-iq.com`;
+  $: successResult = `Sudoku # ${chrono} sudo-iq.com`;
 </script>
-<div>
-  <h2 class="text-2xl text-green-500">Yay, you won!</h2>
+<div class="justify-center">
+  <h2 class="text-2xl justify-center text-green-500">Yay, you won!</h2>
   <div class="flex justify-center items-center space-x-4 mx-auto p-2">
     <p class="text-gray-600">Time: {chrono}</p>
     <button on:click={() => copyToClipboard(successResult)}

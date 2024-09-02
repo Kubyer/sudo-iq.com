@@ -19,10 +19,10 @@
         <img src="/draft_off.svg" alt="Button Icon"/>
     {/if}
     </button>
-    <button on:click={adminTest}
+    <!-- <button on:click={adminTest}
         class="w-12 h-12 ">
         admin
-    </button>
+    </button> -->
     <button on:click={undoLastMove}>
         <img src="/undo.svg" class='flex items-center justify-center h-12 w-12 hover:bg-gray-300 drop-shadow-2xl' alt="Button Icon"/>
     </button>
