@@ -62,6 +62,8 @@
             } else {
                 current[index].value = value;
                 current[index].draft = [];
+
+                removeDraftsInSameRowColumnSubgrid(index, value);
             }
             
             const oldCell: CellData = {
@@ -82,6 +84,8 @@
     }
 
     function handleKeyDown(event: KeyboardEvent): void {
+        if (event.key === 'd' || event.key === 'D') {
+            toggleDraftMode();}
         if (selectedCellIndex === null) return;
 
         if (event.key >= '1' && event.key <= '9') {
@@ -91,10 +95,38 @@
         } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
             event.preventDefault();
             navigateGrid(event.key);
-            console.log(selectedCellIndex)
+        }
 
+        
+    }
+
+    function removeDraftsInSameRowColumnSubgrid(index: number, value: string): void {
+        const row = Math.floor(index / 9);
+        const col = index % 9;
+        const subgridRow = Math.floor(row / 3) * 3;
+        const subgridCol = Math.floor(col / 3) * 3;
+
+        for (let i = 0; i < 81; i++) {
+            if (i === index) continue; // Skip the cell that was just updated
+
+            const currentRow = Math.floor(i / 9);
+            const currentCol = i % 9;
+
+            // Check if the cell is in the same row, column, or subgrid
+            if (currentRow === row || currentCol === col ||
+                (Math.floor(currentRow / 3) === Math.floor(row / 3) && 
+                Math.floor(currentCol / 3) === Math.floor(col / 3))) {
+                
+                // Remove the value from drafts if it exists
+                const draftIndex = current[i].draft.indexOf(value);
+                if (draftIndex !== -1) {
+                    current[i].draft.splice(draftIndex, 1);
+                }
+            }
         }
     }
+
+
 
     function navigateGrid(direction: string): void {
         if (selectedCellIndex === null) return;

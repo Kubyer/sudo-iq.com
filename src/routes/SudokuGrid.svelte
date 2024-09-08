@@ -18,13 +18,13 @@
         {#if initial[subgrid * 9 + i] === '.'}
           <button
             on:click={() => handleCellClick(subgrid * 9 + i)}
-            class="rounded-xl bg-gray-200 hover:bg-gray-500 text-center h-10 w-10 relative 
+            class="rounded-xl bg-gray-200 hover:bg-gray-500 text-center h-10 w-10 relative font-black
                    {(selectedNumber === cell.value) || (selectedNumber && cell.draft.includes(selectedNumber)) ? 'hovered' : ''}"
             class:selected={selectedCellIndex === (subgrid * 9 + i)}>
             {#if cell.value !== '.'}
               <span class="text-lg">{cell.value}</span>
             {:else}
-              <div class="text-xs flex flex-wrap justify-center items-center text-center overflow-hidden leading-tight">
+              <div class="text-xs font-thin	flex flex-wrap justify-center items-center text-center overflow-hidden leading-tight">
                 {#each cell.draft.slice().sort() as num,j}
                   <span class="mr-0.5">
                     {num}
@@ -35,7 +35,7 @@
           </button>
         {:else}
           <div
-            class="rounded-xl bg-gray-300 place-content-center h-10 w-10 flex items-center justify-center
+            class="rounded-xl bg-gray-400 place-content-center h-10 w-10 flex items-center justify-center font-black
                   {selectedNumber === cell.value ? 'hovered' : ''}">
             {cell.value}
           </div>

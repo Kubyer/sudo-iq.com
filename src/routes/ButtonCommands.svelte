@@ -26,4 +26,4 @@
     <button on:click={undoLastMove}>
         <img src="/undo.svg" class='flex items-center justify-center h-12 w-12 hover:bg-gray-300 drop-shadow-2xl' alt="Button Icon"/>
     </button>
-    </div>
+</div>
