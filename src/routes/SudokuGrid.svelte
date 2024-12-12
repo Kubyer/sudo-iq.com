@@ -24,7 +24,7 @@
             {#if cell.value !== '.'}
               <span class="text-lg">{cell.value}</span>
             {:else}
-              <div class="text-xs font-thin	flex flex-wrap justify-center items-center text-center overflow-hidden leading-tight">
+              <div class="text-xs font-thin	flex flex-wrap justify-center items-end text-center overflow-hidden leading-tight h-full">
                 {#each cell.draft.slice().sort() as num,j}
                   <span class="mr-0.5">
                     {num}
