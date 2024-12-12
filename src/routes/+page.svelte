@@ -265,7 +265,6 @@
                 moveHistory: moveHistory,
                 chrono: chrono
             };
-            console.log("1. Client: Sending completion data:", completionData);
 
             fetch('/api/complete-sudoku', {
                 method: 'POST',

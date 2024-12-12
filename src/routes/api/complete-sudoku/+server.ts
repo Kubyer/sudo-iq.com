@@ -1,24 +1,14 @@
 import { json } from '@sveltejs/kit';
 import { supabase } from '$lib/supabase';
 
-export async function POST({ request, locals }) {
-    console.log("1. API endpoint reached");
-    
+export async function POST({ request, locals }) {    
     const userId = locals.userId;
-    console.log("2. User ID:", userId);
 
     try {
         const body = await request.json();
         console.log("3. Request body:", "body");
         
         const { current, moveHistory, chrono } = body;
-
-        console.log("4. Attempting database insert with:", {
-            user_id: userId,
-            current_state: current,
-            move_history: moveHistory,
-            time_elapsed: chrono
-        });
 
         const { data, error } = await supabase
             .from('sudoku_completions')
@@ -31,8 +21,6 @@ export async function POST({ request, locals }) {
                 is_completed: true
             })
             .select();
-
-        console.log("5. Database response:", { data, error });
 
         if (error) throw error;
 
