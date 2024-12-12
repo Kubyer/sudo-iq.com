@@ -4,10 +4,10 @@
     import SudokuGrid from './SudokuGrid.svelte';
     import NumberGrid from './NumberGrid.svelte';
     import ButtonCommands from './ButtonCommands.svelte';
-    import { onMount } from 'svelte';
+    import { onMount, onDestroy } from 'svelte';
     import SuccessScreen from './SuccessScreen.svelte';
     import LoadingGrid from './LoadingGrid.svelte';
-    export let data: { sudoku: string; solution: string };
+    export let data: { sudoku: string; solution: string ; gameState: string | null; moveHistory: Move[]};
 
     import { inject } from '@vercel/analytics'
     import { dev } from '$app/environment';
@@ -31,11 +31,16 @@
     let isLoading = true;
     let moveHistory: Move[] = [];
 
+
     onMount(() => {
         if (data.sudoku && data.solution) {
             initial = data.sudoku.split('')
             current = initial.map(n => ({ value: n, draft: [] }));
             final = data.solution.split('').map(n => ({ value: n, draft: [] }));
+
+            // Load saved moves if they exist
+            moveHistory = data.moveHistory || [];
+
             isLoading = false;
         } else {
         console.error('Invalid data format. Expected an array of 2 strings.');
@@ -47,45 +52,76 @@
         window.addEventListener('keydown', handleKeyDown);
     });
     
+    async function handleGameSave() {
+        console.log("1. Client: Initiating save", {
+            current_state: current,
+            moves: moveHistory
+        });
+
+        try {
+            const response = await fetch('/api/save-game', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    current_state: current,
+                    moves: moveHistory
+                })
+            });
+            const result = await response.json();
+            console.log("2. Client: Received response", result);
+        } catch (error) {
+            console.log("2. Client: Error", error);
+        }
+    }
+
     function updateCell(index: number, value: string): void {
+        // Only proceed if the cell is editable
+        if (initial[index] !== '.') return;
+
         const oldCell: CellData = {
             value: current[index].value,
             draft: [...current[index].draft]
         };
 
-        if (initial[index] === '.') {
+        let newCell: CellData;
+
+        if (isDraftMode) {
+            // Handle draft mode
+            newCell = {
+                value: current[index].value,
+                draft: [...current[index].draft]
+            };
+
             if (value === "X") {
-                current[index].value = ".";
-                current[index].draft = [];
-            } else if (current[index].value === value) {
-                current[index].value = ".";
+                newCell.draft = [];
             } else {
-                current[index].value = value;
-                current[index].draft = [];
-
-                removeDraftsInSameRowColumnSubgrid(index, value);
+                const draftIndex = newCell.draft.indexOf(value);
+                if (draftIndex === -1) {
+                    newCell.draft.push(value);
+                } else {
+                    newCell.draft.splice(draftIndex, 1);
+                }
             }
-            
-            const oldCell: CellData = {
-                value: current[index].value,
-                draft: [...current[index].draft]
+        } else {
+            // Handle regular mode
+            newCell = {
+                value: value === "X" ? "." :
+                    current[index].value === value ? "." : value,
+                draft: []
             };
-
-            const newCell: CellData = {
-                value: current[index].value,
-                draft: [...current[index].draft]
-            };
-
-            moveHistory.push({ index, oldCell, newCell });
-            console.log("New item in hist")
-            current = [...current];
-            checkSolution();
         }
+
+        current[index] = newCell;
+        moveHistory.push({ index, oldCell, newCell });
+        current = [...current]; // Trigger reactivity
+        console.log('moveHistory: ', moveHistory);
+        checkSolution();
     }
 
     function handleKeyDown(event: KeyboardEvent): void {
         if (event.key === 'd' || event.key === 'D') {
-            toggleDraftMode();}
+            toggleDraftMode();
+        }
         if (selectedCellIndex === null) return;
 
         if (event.key >= '1' && event.key <= '9') {
@@ -96,37 +132,7 @@
             event.preventDefault();
             navigateGrid(event.key);
         }
-
-        
     }
-
-    function removeDraftsInSameRowColumnSubgrid(index: number, value: string): void {
-        const row = Math.floor(index / 9);
-        const col = index % 9;
-        const subgridRow = Math.floor(row / 3) * 3;
-        const subgridCol = Math.floor(col / 3) * 3;
-
-        for (let i = 0; i < 81; i++) {
-            if (i === index) continue; // Skip the cell that was just updated
-
-            const currentRow = Math.floor(i / 9);
-            const currentCol = i % 9;
-
-            // Check if the cell is in the same row, column, or subgrid
-            if (currentRow === row || currentCol === col ||
-                (Math.floor(currentRow / 3) === Math.floor(row / 3) && 
-                Math.floor(currentCol / 3) === Math.floor(col / 3))) {
-                
-                // Remove the value from drafts if it exists
-                const draftIndex = current[i].draft.indexOf(value);
-                if (draftIndex !== -1) {
-                    current[i].draft.splice(draftIndex, 1);
-                }
-            }
-        }
-    }
-
-
 
     function navigateGrid(direction: string): void {
         if (selectedCellIndex === null) return;
@@ -213,10 +219,10 @@
             selectedNumber = null;
         } else {
             selectedNumber = number;
-            if (selectedCellIndex !== null && !isDraftMode) {
-                current[selectedCellIndex].value = selectedNumber;
+            if (selectedCellIndex !== null) {
+                updateCell(selectedCellIndex, selectedNumber);
                 selectedCellIndex = null;
-                checkSolution()
+
             }
         }
     }
@@ -225,37 +231,12 @@
         if (selectedCellIndex === index) {
             selectedCellIndex = null;
         } else {
-            if (initial[index] === '.') {
-                if (isDraftMode) {
-                    if (selectedNumber === "X") {
-                        current[index].draft = [];
-                    } else if (selectedNumber) {
-                        const draftIndex = current[index].draft.indexOf(selectedNumber);
-                        if (draftIndex === -1) {
-                            current[index].draft.push(selectedNumber);
-                        } else {
-                            current[index].draft.splice(draftIndex, 1);
-                        }
-                        current = [...current]; // Trigger reactivity
-                    }
-                } else {
-                    if (selectedNumber === "X") {
-                        current[index].value = ".";
-                        current[index].draft = [];
-                    } else if (selectedNumber === null) {
-                        selectedCellIndex = index;
-                    } else if (current[index].value === selectedNumber) {
-                        current[index].value = ".";
-                        selectedCellIndex = null;
-                    } else {
-                        current[index].value = selectedNumber;
-                        current[index].draft = [];
-                        selectedCellIndex = null;
-                    }
+            if (initial[index] === '.') {  // Only allow selecting empty cells
+                selectedCellIndex = index;  // update selection
+                if (selectedNumber) {       // Only update value if there's a selected number
+                    updateCell(index, selectedNumber);
+                    selectedCellIndex = null;
                 }
-
-                current = [...current];
-                checkSolution()
             }
         }
     }
@@ -278,11 +259,34 @@
             showSuccess = true;
             selectedNumber = null;
             selectedCellIndex = null;
+
+            const completionData = {
+                current: current,
+                moveHistory: moveHistory,
+                chrono: chrono
+            };
+            console.log("1. Client: Sending completion data:", completionData);
+
+            fetch('/api/complete-sudoku', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(completionData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("2. Client: Received response:", data);
+            })
+            .catch(error => {
+                console.error("2. Client: Error:", error);
+            });;
         }
     }
 
     function adminTest(): void {
         current = [...final];
+        checkSolution();
     }
 
     function handleClear(): void {
