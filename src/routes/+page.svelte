@@ -7,6 +7,8 @@
     import { onMount, onDestroy } from 'svelte';
     import SuccessScreen from './SuccessScreen.svelte';
     import LoadingGrid from './LoadingGrid.svelte';
+    import InstructionsModal from './InstructionsModal.svelte';
+
     export let data: { sudoku: string; solution: string ; gameState: string | null; moveHistory: Move[]};
 
     import { inject } from '@vercel/analytics'
@@ -30,7 +32,11 @@
     let final: CellData[] = [];
     let isLoading = true;
     let moveHistory: Move[] = [];
+    let isInstructionsOpen = false;
 
+    function toggleInstructions() {
+        isInstructionsOpen = !isInstructionsOpen;
+    }
 
     onMount(() => {
         if (data.sudoku && data.solution) {
@@ -320,13 +326,43 @@
     const successResult = 'Sudoku #n /n {chrono} /n {reward} /n sodu-iq.com';
 </script>
 
+<svelte:head>
+    <title>Daily Sudoku Puzzle</title>
+    <meta name="description" content="Play today's free daily Sudoku puzzle. Join your friends, compare your time, and challenge them with your results. New challenging puzzle every day!" />
+    <meta name="keywords" content="daily sudoku, today's sudoku, sudoku puzzle of the day, online sudoku, free sudoku game, daily brain puzzle, wordle like game, brain games, wordle of sudoku" />
+    
+    <!-- Open Graph tags for social sharing -->
+    <meta property="og:title" content="Can you solve today's Sudoku? Puzzle" />
+    <meta property="og:description" content="Join the daily Sudoku challenge! New puzzle every day. Share your results and compare times with friends. 🧩" />
+    <meta property="og:type" content="game" />
+    <meta property="og:url" content="https://sudo-iq.com" />
+    <!-- <meta property="og:image" content="[Your-Preview-Image-URL]" /> -->
+    
+    <!-- Twitter Card tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Sudo Q - Free Online Sudoku Game" />
+    <meta name="twitter:description" content="Play free Sudoku puzzles online with timing and helpful features." />
+    <!-- <meta name="twitter:image" content="[Your-Preview-Image-URL]" /> -->
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://sudo-iq.com" />
+</svelte:head>
+
 <main>
     <div class="flex justify-center items-center space-x-4 mx-auto p-2">
         <h1 class="text-xl text-center">Sudo Q</h1>
         <Timer {chrono}/>
-        <img src="/info.svg" class='flex items-center justify-center h-12 w-12 hover:bg-gray-300 drop-shadow-2xl' alt="info Icon"/>
+        <button
+            class="flex items-center justify-center h-12 w-12 hover:bg-gray-300 drop-shadow-2xl"
+            on:click={toggleInstructions}
+            aria-label="Show game instructions">
+            <img src="/info.svg" alt="Instructions" class="h-full w-full"/>
+        </button>
     </div>
-    
+    <InstructionsModal 
+        isOpen={isInstructionsOpen}
+        onClose={() => isInstructionsOpen = false}
+    />
     {#if isLoading}
         <LoadingGrid/>
         <ButtonCommands
